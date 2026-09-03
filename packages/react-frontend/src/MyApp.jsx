@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import Table from "./Table";
 
 function MyApp() {
@@ -8,14 +8,24 @@ function MyApp() {
     { name: "Mac",
         job: "Bouncer" },
     { name: "Dee",
-        job: "Aspring actress" },
+        job: "Aspiring actress" },
     { name: "Dennis",
         job: "Bartender"
-    }
+    },
 ]);
+function removeOneCharacter(index){
+    const updated = characters.filter((character, i) => {
+        return i !== index;
+    });
+    setCharacters(updated);
+}
+
   return (
     <div className="container">
-      <Table characterData={characters} />
+      <Table 
+      characterData={characters} 
+      removeCharacter={removeOneCharacter} 
+      />
     </div>
   );
 }
