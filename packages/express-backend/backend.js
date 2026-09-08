@@ -39,6 +39,11 @@ const findUserByName = (name) => {
     return user.name === name;
   });
 };
+const findUserById = (id) => {
+  return users.users_list.find((user) => {
+    return user.id === id;
+  });
+};
 app.get("/", (req, res) => {
   res.send("Hello World!");
 });
@@ -53,7 +58,16 @@ app.get("/users", (req, res) => {
     res.send(users);
   }
 });
+app.get("/users/:id", (req, res) => {
+  const id = req.params.id;
+  const result = findUserById(id);
 
+  if (result === undefined) {
+    res.status(404).send("Resource not found.");
+  } else {
+    res.send(result);
+  }
+});
 app.listen(port, () => {
   console.log(`Example app listening at http://localhost:${port}`);
 });
