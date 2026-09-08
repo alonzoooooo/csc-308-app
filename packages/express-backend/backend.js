@@ -44,9 +44,26 @@ const findUserById = (id) => {
     return user.id === id;
   });
 };
+const findUsersByNameAndJob = (name, job) => {
+  return users.users_list.filter((user) => {
+    return user.name === name && user.job === job;
+  });
+};
 const addUser = (user) => {
   users.users_list.push(user);
   return user;
+};
+const deleteUserById = (id) => {
+  const index = users.users_list.findIndex((user) => {
+    return user.id === id;
+  });
+
+  if (index === -1) {
+    return false;
+  }
+
+  users.users_list.splice(index, 1);
+  return true;
 };
 app.get("/", (req, res) => {
   res.send("Hello World!");
@@ -54,8 +71,12 @@ app.get("/", (req, res) => {
 
 app.get("/users", (req, res) => {
   const name = req.query.name;
+  const job = req.query.job;
 
-  if (name !== undefined) {
+  if (name !== undefined && job !== undefined) {
+    const result = findUsersByNameAndJob(name, job);
+    res.send({ users_list: result });
+  } else if (name !== undefined) {
     const result = findUserByName(name);
     res.send({ users_list: result });
   } else {
@@ -76,6 +97,16 @@ app.post("/users", (req, res) => {
   const userToAdd = req.body;
   addUser(userToAdd);
   res.status(200).send();
+});
+app.delete("/users/:id", (req, res) => {
+  const id = req.params.id;
+  const wasDeleted = deleteUserById(id);
+
+  if (wasDeleted) {
+    res.status(204).send();
+  } else {
+    res.status(404).send("Resource not found.");
+  }
 });
 app.listen(port, () => {
   console.log(`Example app listening at http://localhost:${port}`);
