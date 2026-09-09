@@ -6,11 +6,12 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "npx nodemon backend.js",
-    "start": "node backend.js" 
+    "start": "node backend.js"
   },
   "author": "Alonzo Edwards",
   "license": "ISC",
   "dependencies": {
+    "cors": "^2.8.6",
     "express": "^5.2.1"
   },
   "type": "module"
