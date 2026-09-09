@@ -4,16 +4,27 @@ import Form from "./Form";
 
 function MyApp() {
   const [characters, setCharacters] = useState([]);
-
-  function removeOneCharacter(index) {
-    const updated = characters.filter((character, i) => {
-      return i !== index;
+  function removeOneCharacter(id) {
+  fetch(`http://localhost:8000/users/${id}`, {
+    method: "DELETE",
+  })
+    .then((response) => {
+      if (response.status === 204) {
+        setCharacters((currentCharacters) =>
+          currentCharacters.filter((character) => character.id !== id)
+        );
+      } else if (response.status === 404) {
+        throw new Error("User was not found.");
+      } else {
+        throw new Error(`DELETE failed with status ${response.status}`);
+      }
+    })
+    .catch((error) => {
+      console.log(error);
     });
-
-    setCharacters(updated);
-  }
+}
   function postUser(person) {
-    const promise = fetch("Http://localhost:8000/users", {
+    return fetch("Http://localhost:8000/users", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -21,17 +32,27 @@ function MyApp() {
       body: JSON.stringify(person),
     });
 
-    return promise;
   }
 
-  function updateList(person) { 
-    postUser(person)
-      .then(() => setCharacters([...characters, person]))
-      .catch((error) => {
-        console.log(error);
-      })
-}
+  function updateList(person) {
+  postUser(person)
+    .then((response) => {
+      if (response.status !== 201) {
+        throw new Error(`POST failed with status ${response.status}`);
+      }
 
+      return response.json();
+    })
+    .then((newPerson) => {
+      setCharacters((currentCharacters) => [
+        ...currentCharacters,
+        newPerson,
+      ]);
+    })
+    .catch((error) => {
+      console.log(error);
+    });
+  }
   return (
     <div className="container">
       <Table
