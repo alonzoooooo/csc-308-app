@@ -1,0 +1,16 @@
+{
+  "name": "jest-part",
+  "version": "1.0.0",
+  "description": "",
+  "main": "sample-functions.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "keywords": [],
+  "author": "Alonzo Edwards",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "jest": "^30.5.1"
+  }
+}
