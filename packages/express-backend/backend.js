@@ -1,83 +1,15 @@
 import express from "express";
 import cors from "cors";
+import userServices from "./models/user-services.js";
+
 const app = express();
 const port = 8000;
 
 app.use(cors());
+
+//convs json request bodies in js objects
 app.use(express.json());
 
-const users = {
-  users_list: [
-    {
-      id: "xyz789",
-      name: "Charlie",
-      job: "Janitor",
-    },
-    {
-      id: "abc123",
-      name: "Mac",
-      job: "Bouncer",
-    },
-    {
-      id: "ppp222",
-      name: "Mac",
-      job: "Professor",
-    },
-    {
-      id: "yat999",
-      name: "Dee",
-      job: "Aspiring actress",
-    },
-    {
-      id: "zap555",
-      name: "Dennis",
-      job: "Bartender",
-    },
-  ],
-};
-const findUserByName = (name) => {
-  return users.users_list.filter((user) => {
-    return user.name === name;
-  });
-};
-
-const generateId = () => {
-  return Math.random().toString(36).substring(2, 8);
-};
-
-const findUserById = (id) => {
-  return users.users_list.find((user) => {
-    return user.id === id;
-  });
-};
-
-const findUsersByNameAndJob = (name, job) => {
-  return users.users_list.filter((user) => {
-    return user.name === name && user.job === job;
-  });
-};
-
-const addUser = (user) => {
-  const newUser = {
-    ...user,
-    id: generateId(),
-  };
-
-  users.users_list.push(newUser);
-  return newUser;
-};
-const deleteUserById = (id) => {
-  const index = users.users_list.findIndex((user) => {
-    return user.id === id;
-  });
-
-  if (index === -1) {
-    return false;
-  }
-
-  users.users_list.splice(index, 1);
-  return true;
-};
 app.get("/", (req, res) => {
   res.send("Hello World!");
 });
@@ -86,40 +18,69 @@ app.get("/users", (req, res) => {
   const name = req.query.name;
   const job = req.query.job;
 
-  if (name !== undefined && job !== undefined) {
-    const result = findUsersByNameAndJob(name, job);
-    res.send({ users_list: result });
-  } else if (name !== undefined) {
-    const result = findUserByName(name);
-    res.send({ users_list: result });
-  } else {
-    res.send(users);
-  }
+  //getUsers rets a mongoose query instead of an array
+  // .then runs after users are ret by MongoDB
+  userServices
+    .getUsers(name, job)
+    .then((users) => {
+      res.send({users_list: users });
+    })
+      .catch((error) => {
+        console.log(error);
+        res.status(500).send("Unable to get users.");
+      });
 });
-app.get("/users/:id", (req, res) => {
+//get user id
+app.get("/users/:id", (req, res) =>{
   const id = req.params.id;
-  const result = findUserById(id);
 
-  if (result === undefined) {
-    res.status(404).send("Resource not found.");
-  } else {
-    res.send(result);
-  }
+  userServices
+    .findUserById(id)
+    .then((user) => {
+      if(user===null){
+        res.status(404).send("Resource not found.");
+      } else {
+        res.send(user);
+      }
+    })
+    .catch((error) => {
+      console.log(error);
+      res.status(500).send("Unable to find user.");
+    });
 });
+//POST-->user
 app.post("/users", (req, res) => {
-  const userToAdd = req.body;
-  const newUser = addUser(userToAdd);
-  res.status(201).send(newUser);
+  const userToAdd =req.body;
+  userServices
+    .addUser(userToAdd)
+    .then((newUser) => {
+      //201 means that a new resource was successfully created
+      res.status(201).send(newUser);
+    })
+    .catch((error) =>{
+      console.log(error);
+      //400 = the user committed a schema violation, something like missing name or a job less than < 2 chars
+      res.status(400).send(error.message);
+    });
 });
-app.delete("/users/:id", (req, res) => {
+//DELETE-->user by id :(
+app.delete("/users/:id", (req, res) =>{
   const id = req.params.id;
-  const wasDeleted = deleteUserById(id);
-
-  if (wasDeleted) {
-    res.status(204).send();
-  } else {
-    res.status(404).send("Resource not found.");
-  }
+  userServices
+    .deleteUserById(id)
+    .then((deletedUser) => {
+      // if user not find ret null
+      if(deletedUser=== null){
+        res.status(404).send("Resource not found");
+      } else {
+      // 204 means successfully deleted the user
+      res.status(204).send();
+      }
+    })
+    .catch((error) => {
+      console.log(error);
+      res.status(500).send("Unable to delete user.");
+    });
 });
 app.listen(port, () => {
   console.log(`Example app listening at http://localhost:${port}`);
